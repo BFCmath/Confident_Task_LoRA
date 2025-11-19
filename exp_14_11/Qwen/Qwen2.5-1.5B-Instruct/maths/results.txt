@@ -1,0 +1,4 @@
+Accuracy w/ greedy decoding: 0.5092
+Average Generated Tokens: 607.77
+Confidence Accuracy: 0.5148
+Confidence Token Counts: {'<C_MATH>': 4656, 'No Confidence Token': 305, '<U_MATH>': 33, '<U_MED>': 6}

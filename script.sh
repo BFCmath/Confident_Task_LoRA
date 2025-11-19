@@ -2,14 +2,17 @@
 
 # Define the models and datasets
 models=(
-  "Qwen/Qwen2.5-1.5B-Instruct"
+  # "Qwen/Qwen2.5-1.5B-Instruct"
+  "Qwen/Qwen2.5-Math-1.5B-Instruct"
   # "TheBloke/Llama-2-7B-Chat-GPTQ"
 )
 
-n_sample=1000
+n_sample=6750
 
 saved_models=(
-    "Qwen2.5-1.5B-Instruct_Confident_Task_LoRA_${n_sample}"
+    # "Qwen2.5-1.5B-Instruct_Confident_Task_LoRA_${n_sample}"
+    "Qwen2.5-Math-1.5B-Instruct_Confident_Task_LoRA_Balance_Sample_${n_sample}"
+
 )
 
 
@@ -35,7 +38,7 @@ for i in "${!models[@]}"; do
 
     echo "Launching fine-tuning on GPU $gpu: $model"
     python finetune_model.py \
-        --gpus 1 2 --use_gpu \
+        --gpus 3 --use_gpu \
         --model "$model" \
         --saved_peft_model "$saved_model" \
         --lr "$lr" \

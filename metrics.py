@@ -56,14 +56,14 @@ def len_extract_boxed(text):
 
 
 def extract_confidence_token(text):
-    if "<C_MED>" in text:
-        return "<C_MED>"
-    elif "<U_MED>" in text:
-        return "<U_MED>"
-    elif "<C_MATH>" in text:
-        return "<C_MATH>"
-    elif "<U_MATH>" in text:
-        return "<U_MATH>"
+    # if "<C_MED>" in text:
+    #     return "<C_MED>"
+    # elif "<U_MED>" in text:
+    #     return "<U_MED>"
+    if "<|c_math|>" in text:
+        return "<|c_math|>"
+    elif "<|u_math|>" in text:
+        return "<|u_math|>"
     else:
         return "No Confidence Token"
 
@@ -124,8 +124,8 @@ def compute_metrics(decoded_preds, decoded_labels, all_questions, question_type,
 
         df['confidence_correct'] = df.swifter.apply(
             lambda row: (
-                (row['confidence_token'] == '<C_MATH>' and row['check'] == True) or
-                (row['confidence_token'] == '<U_MATH>' and row['check'] == False)
+                (row['confidence_token'] == '<|c_math|>' and row['check'] == True) or
+                (row['confidence_token'] == '<|u_math|>' and row['check'] == False)
             ), axis=1
         )
 
@@ -142,6 +142,11 @@ def compute_metrics(decoded_preds, decoded_labels, all_questions, question_type,
         raise ValueError("Question type not supported for metrics computation.")
 
     track_lst = df['check'].tolist()
+
+    # Count the number of confidence_token
+    confidence_token_counts = df['confidence_token'].value_counts()
+    print("Confidence Token Counts:")
+    print(confidence_token_counts)
 
     if save is not None:
         df.to_csv(save, index=False)
@@ -171,7 +176,8 @@ def compute_metrics(decoded_preds, decoded_labels, all_questions, question_type,
     result = {
         "accuracy": accuracy,
         "confidence_accuracy": confidence_accuracy,
-        "avg_generated_tokens": avg_tokens
+        "avg_generated_tokens": avg_tokens,
+        "confidence_token_counts": confidence_token_counts.to_dict()
     }
     
     return result

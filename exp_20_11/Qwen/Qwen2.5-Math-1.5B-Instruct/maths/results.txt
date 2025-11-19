@@ -1,0 +1,4 @@
+Accuracy w/ greedy decoding: 0.7200
+Average Generated Tokens: 613.67
+Confidence Accuracy: 0.7600
+Confidence Token Counts: {'<|c_math|>': 345, '<|u_math|>': 143, 'No Confidence Token': 12}

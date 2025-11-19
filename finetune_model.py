@@ -11,7 +11,7 @@ import transformers
 import torch
 from peft import PeftModel
 
-from read_data import read_data  # Import your custom data loader
+from read_data import read_data_equal  # Import your custom data loader
 
 
 import argparse
@@ -108,17 +108,18 @@ if __name__== "__main__":
 
     # Use your custom data loader (like in notebook)
 
-    dataset_math = read_data("maths", n_samples=args.n_samples)
-    dataset_medqa = read_data("medqa", n_samples=args.n_samples)
+    dataset_math = read_data_equal("maths", n_samples=args.n_samples)
+    # dataset_medqa = read_data("medqa", n_samples=args.n_samples)
     # Combine datasets
-    from datasets import concatenate_datasets, DatasetDict
+    # from datasets import concatenate_datasets, DatasetDict
 
-    dataset = DatasetDict({
-        "train": concatenate_datasets([
-            dataset_math["train"],
-            dataset_medqa["train"]
-        ])
-    })
+    # dataset = DatasetDict({
+    #     "train": concatenate_datasets([
+    #         dataset_math["train"],
+    #         dataset_medqa["train"]
+    #     ])
+    # })
+    dataset = dataset_math  # Only maths dataset for now
 
     print(f"Finish combining loaded dataset:{len(dataset['train'])} training examples.")
 

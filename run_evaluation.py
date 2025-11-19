@@ -39,7 +39,7 @@ def parse_args():
     # parser.add_argument('--model_gen', type=str, choices=["llama", "mistral"], default='mistral', help='Model family')
     # parser.add_argument('--size', type=str, choices=['7B', '13B', '8B'], default='13B', help='Model size')
     parser.add_argument('--seed', type=int, default=0, help='Random seed')
-    parser.add_argument("--MAX_LEN", type=int, default=2048, help="Max length limitation for tokenized texts")
+    parser.add_argument("--MAX_LEN", type=int, default=4068, help="Max length limitation for tokenized texts")
     
     
     return parser.parse_args()
@@ -106,7 +106,7 @@ if __name__== "__main__":
         temperature=0.0,  # Deterministic generation for evaluation
         top_p=1.0,
         max_tokens=MAX_LEN,
-        stop=["</s>", "<|im_end|>", "<C_MATH>", "<U_MATH>", "<C_MED>", "<U_MED>"],
+        stop=["</s>", "<|im_end|>", "<|c_math|>", "<|u_math|>", "<|c_med|>", "<|u_med|>"],
         include_stop_str_in_output=True
     )
 
@@ -134,15 +134,20 @@ if __name__== "__main__":
     test_accuracy = test_results['accuracy']
     confidence_accuracy = test_results['confidence_accuracy']
     avg_tokens = test_results['avg_generated_tokens']
+    confidence_token_counts = test_results['confidence_token_counts']
 
     # Save enhanced results to a text file
     with open(save_txt_dir, "w") as file:
         message_accuracy = f"Accuracy w/ greedy decoding: {test_accuracy:.4f}"
         message_tokens = f"Average Generated Tokens: {avg_tokens:.2f}"
         message_confidence = f"Confidence Accuracy: {confidence_accuracy:.4f}"
-        
-        full_message = f"{message_accuracy}/{message_tokens}/{message_confidence}"
-        
-        print(message_accuracy)           # Print to console
-        print(message_tokens)
-        print(message_confidence)
+        message_confidence_tokens = f"Confidence Token Counts: {confidence_token_counts}"
+        full_message = f"{message_accuracy}\n{message_tokens}\n{message_confidence}\n{message_confidence_tokens}"
+        file.write(full_message)
+
+    print(f"Saved results to {save_txt_dir}")
+
+    print(message_accuracy)           # Print to console
+    print(message_tokens)
+    print(message_confidence)
+    print(message_confidence_tokens)
