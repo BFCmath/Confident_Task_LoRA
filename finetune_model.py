@@ -209,7 +209,7 @@ if __name__== "__main__":
     #     print(f"Best model saved to: {save_dir}")
 
 
-    # # Save the final trained model (IMPORTANT!)
+    # # Save the final trained model
     final_model_path = f"finetuned_models/{args.saved_peft_model}_final"
     os.makedirs(final_model_path, exist_ok=True)
     
