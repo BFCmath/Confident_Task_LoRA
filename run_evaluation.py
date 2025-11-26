@@ -106,7 +106,7 @@ if __name__== "__main__":
         temperature=0.0,  # Deterministic generation for evaluation
         top_p=1.0,
         max_tokens=MAX_LEN,
-        stop=["</s>", "<|im_end|>", "<|c_math|>", "<|u_math|>", "<|c_med|>", "<|u_med|>"],
+        stop=["</s>", "<|im_end|>", "<c_math>", "<u_math>", "<|c_med|>", "<|u_med|>"],
         include_stop_str_in_output=True
     )
 

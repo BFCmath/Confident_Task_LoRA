@@ -5,7 +5,12 @@ from pathlib import Path
 
 # Function to convert examples into Qwen format
 def convert_to_qwen_format(example):
-    system_msg = """You are helpful assistant for mathematical problems. Please reason step by step, and put your final answer within \\boxed{}.
+    system_msg = """You are a helpful assistant for mathematical problems. 
+Please reason step by step.
+At the end, you must verify your confidence.
+If you are confident in your answer, output <c_math>.
+If you are unsure, output <u_math>.
+Put your final answer within \\boxed{} and verify your confidence.
 """
 
     user_msg = example["question"]
@@ -13,7 +18,7 @@ def convert_to_qwen_format(example):
 
 
     # Change token to suitable Qwen model
-    token_dict = {"<C_MATH>": "<|c_math|>", "<U_MATH>": "<|u_math|>"}
+    token_dict = {"<C_MATH>": "<c_math>", "<U_MATH>": "<u_math>"}
     for old_token, new_token in token_dict.items():
         assistant_msg = assistant_msg.replace(old_token, new_token)
 
@@ -27,7 +32,12 @@ def convert_to_qwen_format(example):
 
 
 def convert_to_qwen_format_user(question):
-    system_msg = """You are helpful assistant for mathematical problems. Please reason step by step, and put your final answer within \\boxed{}.
+    system_msg = """You are a helpful assistant for mathematical problems. 
+Please reason step by step.
+At the end, you must verify your confidence.
+If you are confident in your answer, output <c_math>.
+If you are unsure, output <u_math>.
+Put your final answer within \\boxed{} and verify your confidence.
 """
     user_msg = question
     formatted = (

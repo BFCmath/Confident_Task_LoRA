@@ -1,0 +1,7 @@
+| Case                   | Math Result | Model Tag  | Assessment   | Proposed Reward | Meaning                                                                                           |
+| ---------------------- | ----------- | ---------- | ------------ | --------------- | ------------------------------------------------------------------------------------------------- |
+| **C1 (Ideal)**         | Correct     | `<c_math>` | Excellent    | **+2.0**        | Encourages the model to solve correctly and be confident.                                         |
+| **C2 (Cautious)**      | Correct     | `<u_math>` | Good         | **+1.0**        | Correct solution but not confident. Still rewarded, but less than C1.                             |
+| **C3 (Honest)**        | Wrong       | `<u_math>` | Acceptable   | **+0.1**        | Wrong answer but knows it is wrong. Small reward to promote honesty and avoid “making things up.” |
+| **C4 (Hallucination)** | Wrong       | `<c_math>` | Worst        | **–1.0**        | Wrong answer but still confident. Strong penalty to reduce hallucination.                         |
+| **C5 (Format error)**  | N/A         | No tag/box | Format error | **–0.5**        | Penalty for not following prompt instructions.                                                    |

@@ -60,10 +60,10 @@ def extract_confidence_token(text):
     #     return "<C_MED>"
     # elif "<U_MED>" in text:
     #     return "<U_MED>"
-    if "<|c_math|>" in text:
-        return "<|c_math|>"
-    elif "<|u_math|>" in text:
-        return "<|u_math|>"
+    if "<c_math>" in text:
+        return "<c_math>"
+    elif "<u_math>" in text:
+        return "<u_math>"
     else:
         return "No Confidence Token"
 
@@ -124,8 +124,8 @@ def compute_metrics(decoded_preds, decoded_labels, all_questions, question_type,
 
         df['confidence_correct'] = df.swifter.apply(
             lambda row: (
-                (row['confidence_token'] == '<|c_math|>' and row['check'] == True) or
-                (row['confidence_token'] == '<|u_math|>' and row['check'] == False)
+                (row['confidence_token'] == '<c_math>' and row['check'] == True) or
+                (row['confidence_token'] == '<u_math>' and row['check'] == False)
             ), axis=1
         )
 
