@@ -60,12 +60,40 @@ def prepare_dataset(sft_data: List[Dict], tokenizer: AutoTokenizer) -> Dataset:
     
     # Tokenize
     def tokenize_function(examples):
-        return tokenizer(
+        tokenized = tokenizer(
             examples["text"],
             truncation=True,
             max_length=2048,
             padding=False
         )
+
+        # Get token IDs for masking
+        span_token_id = tokenizer.convert_tokens_to_ids("<span>")
+        u_math_token_id = tokenizer.convert_tokens_to_ids("<u_math>")
+        
+        # Create labels with masking
+        labels = []
+        for input_ids in tokenized["input_ids"]:
+            # Start with all labels = input_ids
+            label = list(input_ids)
+            
+            # Apply masking for text between <span> and <u_math>
+            is_masking = False
+            for i, token_id in enumerate(input_ids):
+                if token_id == span_token_id:
+                    is_masking = True
+                    # Keep the <span> token (Weight = 1)
+                elif token_id == u_math_token_id:
+                    is_masking = False
+                    # Keep the <u_math> token (Weight = 1)
+                elif is_masking:
+                    # Mask tokens inside the span (Weight = 0)
+                    label[i] = -100
+            
+            labels.append(label)
+        
+        tokenized["labels"] = labels
+        return tokenized
     
     tokenized_dataset = dataset.map(
         tokenize_function,
@@ -105,6 +133,14 @@ def train_sft(
     tokenizer = AutoTokenizer.from_pretrained(model_id, trust_remote_code=True)
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
+
+    # Add special tokens for confidence and spans
+    special_tokens = ["<u_math>", "<c_math>", "<span>"]
+    num_added_toks = tokenizer.add_special_tokens({"additional_special_tokens": special_tokens})
+    
+    if num_added_toks > 0:
+        print(f"Added {num_added_toks} special tokens: {special_tokens}")
+        model.resize_token_embeddings(len(tokenizer))
     
     # Apply LoRA
     if use_lora:

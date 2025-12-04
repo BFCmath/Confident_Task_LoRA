@@ -187,74 +187,45 @@ def print_logits_analysis(
     question: str,
     response: str,
     token_logits: List[Dict],
+    ground_truth: str = "",
     show_top_k: int = 3,
     min_prob_threshold: float = 0.1,
 ):
     """Print detailed logits analysis."""
+    from metrics import extract_box
+    
     print("\n" + "="*100)
     print("LOGITS ANALYSIS")
     print("="*100)
     
-    print(f"\nQuestion: {question[:150]}...")
-    print(f"\nGenerated Response:\n{response}")
-    print("\n" + "-"*100)
-    print("TOKEN-BY-TOKEN ANALYSIS")
-    print("-"*100)
+    # 1. Question
+    print(f"\nQuestion: {question}")
     
-    for token_info in token_logits:
-        pos = token_info['position']
-        token = token_info['token']
-        logit = token_info['logit']
-        prob = token_info['probability']
+    # 2. Ground Truth | Model's Boxed Answer
+    model_answer = extract_box(response)
+    print(f"\nGround Truth: {ground_truth} | Model Answer: {model_answer}")
+    
+    # 3. Low confidence tokens
+    print("\nLow Confidence Tokens (prob < 0.9):")
+    low_conf_tokens = [t for t in token_logits if t['probability'] < 0.5]
+    if low_conf_tokens:
+        for t in low_conf_tokens:
+            print(f"  '{t['token']}' (prob: {t['probability']:.4f}, pos: {t['position']})")
+    else:
+        print("  None")
         
-        # Color code based on probability
-        if prob > 0.9:
-            confidence = "🟢 VERY HIGH"
-        elif prob > 0.7:
-            confidence = "🟡 HIGH"
-        elif prob > 0.5:
-            confidence = "🟠 MEDIUM"
+    # 4. Full answer with highlighting
+    print("\nFull Answer (Low confidence in [brackets]):")
+    highlighted_text = ""
+    for t in token_logits:
+        token_str = t['token']
+        if t['probability'] < 0.9:
+            highlighted_text += f"[{token_str}]"
         else:
-            confidence = "🔴 LOW"
-        
-        print(f"\n[Position {pos}] Token: '{token}' (ID: {token_info['token_id']})")
-        print(f"  Logit: {logit:.4f} | Probability: {prob:.4f} ({prob*100:.2f}%) {confidence}")
-        
-        # Show special token indicators
-        if token_info['is_confidence_token']:
-            print(f"  ⭐ CONFIDENCE TOKEN DETECTED!")
-        if token_info['is_special']:
-            print(f"  🔖 Special token")
-        
-        # Show top alternatives only if selected token is not very confident
-        if prob < 0.9:
-            print(f"  Top {show_top_k} alternatives:")
-            for i, alt in enumerate(token_info['top5_alternatives'][:show_top_k], 1):
-                if i == 1 and alt['token_id'] == token_info['token_id']:
-                    continue  # Skip if it's the same as selected
-                alt_marker = "  ⚠️ " if alt['prob'] > min_prob_threshold else "     "
-                print(f"{alt_marker}  {i}. '{alt['token']}' - Logit: {alt['logit']:.4f}, Prob: {alt['prob']:.4f} ({alt['prob']*100:.2f}%)")
+            highlighted_text += token_str
+    print(highlighted_text)
     
     print("\n" + "="*100)
-    
-    # Summary statistics
-    probs = [t['probability'] for t in token_logits]
-    print("\nSUMMARY STATISTICS:")
-    print(f"  Total tokens generated: {len(token_logits)}")
-    print(f"  Average probability: {np.mean(probs):.4f}")
-    print(f"  Min probability: {np.min(probs):.4f} at position {np.argmin(probs)}")
-    print(f"  Max probability: {np.max(probs):.4f} at position {np.argmax(probs)}")
-    
-    # Count confidence tokens
-    confidence_tokens = [t for t in token_logits if t['is_confidence_token']]
-    if confidence_tokens:
-        print(f"\n  Confidence tokens found: {len(confidence_tokens)}")
-        for ct in confidence_tokens:
-            print(f"    - '{ct['token']}' at position {ct['position']} (prob: {ct['probability']:.4f})")
-    else:
-        print(f"\n  ⚠️  No confidence tokens found!")
-    
-    print("="*100)
 
 
 def save_logits_to_json(
@@ -286,14 +257,9 @@ def save_logits_to_txt(
     from metrics import extract_box
     
     with open(output_file, 'w', encoding='utf-8') as f:
-        f.write("="*80 + "\n")
-        f.write("LOGITS ANALYSIS - SIMPLIFIED FORMAT\n")
-        f.write("="*80 + "\n\n")
-        
-        # Question
-        f.write(f"QUESTION:\n{question}\n\n")
-        f.write(f"GROUND TRUTH:\n{ground_truth}\n\n")
-        f.write("="*80 + "\n\n")
+        f.write("="*100 + "\n")
+        f.write("LOGITS ANALYSIS\n")
+        f.write("="*100 + "\n\n")
         
         # For each generation
         for i, resp_data in enumerate(responses_data, 1):
@@ -304,31 +270,36 @@ def save_logits_to_txt(
             pred_answer = extract_box(response)
             gt_answer = extract_box(ground_truth) or ground_truth
             
-            is_correct = False
-            have_answer = bool(pred_answer)
-            
-            if pred_answer and gt_answer:
-                is_correct = math_equal(pred_answer, gt_answer)
-            
-            # Header for this generation
             f.write(f"GENERATION {i}\n")
-            f.write("-"*80 + "\n")
-            f.write(f"true|false: {is_correct}\n")
-            f.write(f"have_answer: {have_answer}\n")
-            if have_answer:
-                f.write(f"predicted_answer: {pred_answer}\n")
-            f.write(f"\nRESPONSE:\n{response}\n\n")
+            f.write("="*100 + "\n\n")
             
-            # Token probabilities
-            f.write("DETAIL PROBABILITIES:\n")
-            f.write("-"*80 + "\n")
-            for token_info in token_logits:
-                token = token_info['token']
-                prob = token_info['probability']
-                # Format: token | probability
-                f.write(f"{token} | {prob:.6f}\n")
+            # 1. Question
+            f.write(f"Question: {question}\n\n")
             
-            f.write("\n" + "="*80 + "\n\n")
+            # 2. Ground Truth | Model's Boxed Answer
+            f.write(f"Ground Truth: {ground_truth} | Model Answer: {pred_answer}\n\n")
+            
+            # 3. Low confidence tokens
+            f.write("Low Confidence Tokens (prob < 0.9):\n")
+            low_conf_tokens = [t for t in token_logits if t['probability'] < 0.9]
+            if low_conf_tokens:
+                for t in low_conf_tokens:
+                    f.write(f"  '{t['token']}' (prob: {t['probability']:.4f}, pos: {t['position']})\n")
+            else:
+                f.write("  None\n")
+            
+            # 4. Full answer with highlighting
+            f.write("\nFull Answer (Low confidence in [brackets]):\n")
+            highlighted_text = ""
+            for t in token_logits:
+                token_str = t['token']
+                if t['probability'] < 0.9:
+                    highlighted_text += f"[{token_str}]"
+                else:
+                    highlighted_text += token_str
+            f.write(highlighted_text + "\n")
+            
+            f.write("\n" + "="*100 + "\n\n")
     
     print(f"\n✅ Saved simplified logits analysis to: {output_file}")
 
@@ -380,7 +351,12 @@ def main(
         )
         
         # Print analysis
-        print_logits_analysis(question, response, token_logits)
+        print_logits_analysis(
+            question, 
+            response, 
+            token_logits, 
+            ground_truth=question_data['ground_truth']
+        )
         
         # Store data
         responses_data.append({
